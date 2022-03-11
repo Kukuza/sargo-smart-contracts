@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.4;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "hardhat/console.sol";
 
 contract WakalaEscrow  {
     
@@ -19,7 +20,7 @@ contract WakalaEscrow  {
 
     event AgentPairingEvent(WakalaTransaction wtx);
 
-    event TransactionInitEvent(WakalaTransaction wtx);
+    event TransactionInitEvent(uint wtxIndex, address initiatorAddress);
     
     event ClientConfirmationEvent(WakalaTransaction wtx);
     
@@ -61,8 +62,6 @@ contract WakalaEscrow  {
         address clientAddress;
         address agentAddress;
         Status status;
-        // bytes32 clientPhoneNo;
-        // bytes32 agentPhoneNo;
         uint256 amount;
         uint256 agentFee;
         uint256 wakalaFee;
@@ -70,17 +69,17 @@ contract WakalaEscrow  {
         bool agentApproval;
         bool clientApproval;
     }
-   
-  
-//   constructor(string memory _encryptionKey) public {
-//       encryptionKey = _encryptionKey;
-//   }
-   
+
+    function getNextTransactionIndex() public view returns(uint) {
+        return nextTransactionID;
+    }
+
+
    /**
     * Client initialize withdrawal transaction.
     *
     **/
-   function initializeWithdrawalTransaction(uint256 _amount) public returns(uint) {
+   function initializeWithdrawalTransaction(uint256 _amount) public {
         require(_amount > 0, "Amount to deposit must be greater than 0.");
         
         uint wtxID = nextTransactionID;
@@ -110,16 +109,14 @@ contract WakalaEscrow  {
             "You don't have enough cUSD to make this request."
         );
     
-        emit TransactionInitEvent(newPayment);
-    
-        return wtxID;
+        emit TransactionInitEvent(wtxID, msg.sender);
    }
    
    /**
     * Client initialize deposit transaction.
     * 
     **/
-   function initializeDepositTransaction(uint256 _amount) public returns(uint) {
+   function initializeDepositTransaction(uint256 _amount) public {
         require(_amount > 0, "Amount to deposit must be greater than 0.");
         
         uint wtxID = nextTransactionID;
@@ -143,9 +140,7 @@ contract WakalaEscrow  {
         newPayment.agentApproval = false;
         newPayment.clientApproval = false;
         
-        emit TransactionInitEvent(newPayment);
-        
-        return wtxID;
+        emit TransactionInitEvent(wtxID, msg.sender);
    }
     
     /**
