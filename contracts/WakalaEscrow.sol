@@ -18,6 +18,8 @@ contract WakalaEscrow  {
     
     uint private wakalaFee = 0;
 
+    uint private successfulTransactionsCounter = 0;
+
     event AgentPairingEvent(WakalaTransaction wtx);
 
     event TransactionInitEvent(uint wtxIndex, address initiatorAddress);
@@ -70,10 +72,19 @@ contract WakalaEscrow  {
         bool clientApproval;
     }
 
+    /**
+     * Get the number of transactions in the smart contract.
+     */
     function getNextTransactionIndex() public view returns(uint) {
         return nextTransactionID;
     }
 
+    /**
+     * Get the number of successful transactions within the smart contract.
+     */
+    function countSuccessfulTransactions() public view returns (uint) {
+        return  successfulTransactionsCounter;
+    }
 
    /**
     * Client initialize withdrawal transaction.
@@ -214,8 +225,8 @@ contract WakalaEscrow  {
      * Agent comnfirms that the payment  has been made.
      */
     function agentConfirmPayment(uint _transactionid) public 
-    awaitConfirmation(_transactionid)
-    agentOnly(_transactionid) {
+        awaitConfirmation(_transactionid)
+        agentOnly(_transactionid) {
         
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         
@@ -256,6 +267,8 @@ contract WakalaEscrow  {
             require(ERC20(cUsdTokenAddress).transfer(wtx.agentAddress, wtx.amount + wtx.agentFee),
               "Transaction failed.");
         }
+        
+        successfulTransactionsCounter++;
         
         emit TransactionCompletionEvent(wtx);
     }

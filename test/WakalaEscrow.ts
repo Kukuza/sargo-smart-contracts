@@ -19,3 +19,16 @@ describe("Test Initialize transactions.", function () {
     expect(await wakalaEscrow.getNextTransactionIndex()).to.equal(1);
   });
 });
+
+describe("Test get transactions counter value.", function () {
+  it("Test", async function () {
+    const [owner] = await ethers.getSigners();
+
+    const WakalaEscrow = await ethers.getContractFactory("WakalaEscrow");
+    const wakalaEscrow = await WakalaEscrow.deploy();
+    await wakalaEscrow.deployed();
+
+    expect(await wakalaEscrow.countSuccessfulTransactions()).to.equal(0);
+
+  });
+});
