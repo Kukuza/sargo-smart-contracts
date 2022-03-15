@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 pragma solidity ^0.8.4;
 
@@ -35,7 +35,7 @@ contract WakalaEscrow  {
      /**
       * Address of the cUSD token on Alfajores: 
       */
-    address internal cUsdTokenAddress = 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
+    address internal cUsdTokenAddress;
     
       // Maps unique payment IDs to escrowed payments.
       // These payment IDs are the temporary wallet addresses created with the escrowed payments.
@@ -70,6 +70,16 @@ contract WakalaEscrow  {
         uint256 grossAmount;
         bool agentApproval;
         bool clientApproval;
+    }
+
+    /**
+     * Constructor.
+     */
+    constructor(address _cUSDTokenAddress, uint256 _agentFee) {
+        cUsdTokenAddress = _cUSDTokenAddress;
+        if (_agentFee > 0) {
+            agentFee = _agentFee;
+        }        
     }
 
     /**
@@ -112,13 +122,15 @@ contract WakalaEscrow  {
         newPayment.agentApproval = false;
         newPayment.clientApproval = false;
         
-        require(
-            ERC20(cUsdTokenAddress).transferFrom(
+        
+        ERC20(cUsdTokenAddress).transferFrom(
             msg.sender,
             address(this), 
-            grossAmount),
-            "You don't have enough cUSD to make this request."
-        );
+            grossAmount);
+        // require(
+        //     ,
+        //     "You don't have enough cUSD to make this request."
+        // );
     
         emit TransactionInitEvent(wtxID, msg.sender);
    }
