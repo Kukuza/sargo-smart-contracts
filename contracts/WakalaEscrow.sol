@@ -82,6 +82,7 @@ contract WakalaEscrow  {
         }        
     }
 
+
     /**
      * Get the number of transactions in the smart contract.
      */
