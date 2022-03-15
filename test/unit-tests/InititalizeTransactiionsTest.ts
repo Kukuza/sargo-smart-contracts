@@ -22,6 +22,7 @@ describe("Test Initialize transactions.", function () {
   it("Test initialize deposit transactions.", async function () {
     const testUtil = new TestUtil();
     await testUtil.intit();
+    await testUtil.cUSD.approve(testUtil.wakalaEscrow.address, 10);
 
     expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(0);
 
