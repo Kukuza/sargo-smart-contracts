@@ -19,7 +19,7 @@ async function main() {
     "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1",
     0
   );
- 
+
   await wakalaEscrow.deployed();
 
   console.log("WakalaEscrow deployed to: { ", wakalaEscrow.address, " } ");
