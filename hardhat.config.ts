@@ -25,19 +25,19 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 const config: HardhatUserConfig = {
   solidity: "0.8.4",
   networks: {
-    // ropsten: {
-    //   url: process.env.ROPSTEN_URL || "",
-    //   accounts:
-    //     process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    // },
-    alfajores: {
-      url: "https://alfajores-forno.celo-testnet.org",
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-        path: "m/44'/52752'/0'/0",
-      },
-      chainId: 44787,
+    ropsten: {
+      url: process.env.ROPSTEN_URL || "",
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
+    // alfajores: {
+    //   url: "https://alfajores-forno.celo-testnet.org",
+    //   accounts: {
+    //     mnemonic: process.env.MNEMONIC,
+    //     path: "m/44'/52752'/0'/0",
+    //   },
+    //   chainId: 44787,
+    // },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
