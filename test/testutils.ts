@@ -1,11 +1,10 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
-import { WakalaEscrow } from "../typechain/WakalaEscrow";
 
 export class TestUtil {
   public cUSD!: Contract;
-  public wakalaEscrow!: WakalaEscrow;
+  public wakalaEscrow!: any;
   public user1Address!: SignerWithAddress;
   public user2Address!: SignerWithAddress;
 
