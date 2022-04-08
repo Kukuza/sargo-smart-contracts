@@ -30,6 +30,8 @@ describe("Test Initialize transactions.", function () {
       .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
 
+    expect(await testUtil.wakalaEscrow.getTransactionByIndex(0)).to.not.be.null;
+
     expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(1);
   });
 });
