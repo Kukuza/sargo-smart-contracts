@@ -39,7 +39,7 @@ contract WakalaEscrow  {
     
       // Maps unique payment IDs to escrowed payments.
       // These payment IDs are the temporary wallet addresses created with the escrowed payments.
-    mapping(uint => WakalaTransaction) public escrowedPayments;
+    mapping(uint => WakalaTransaction) private escrowedPayments;
     
     /**
      * An enum of the transaction types. either deposit or withdrawal.
@@ -286,6 +286,15 @@ contract WakalaEscrow  {
         emit TransactionCompletionEvent(wtx);
     }
     
+    /**
+      * Gets transactions by index.
+      * @param _transactionID the transaction id.
+      * @return the transaction in questsion.
+      */
+    function getTransactionByIndex(uint _transactionID) public view returns (WakalaTransaction memory) {
+        WakalaTransaction memory wtx = escrowedPayments[_transactionID];
+        return wtx;
+    }
     
     /**
      * Prevents users othe than the agent from running the logic.
