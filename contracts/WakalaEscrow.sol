@@ -14,7 +14,7 @@ contract WakalaEscrow  {
     
     uint private nextTransactionID = 0; 
 
-    uint private agentFee  = 2500000000000000;
+    uint private agentFee  = 50000000000000000;
     
     uint private wakalaFee = 0;
 
@@ -101,7 +101,7 @@ contract WakalaEscrow  {
     * Client initialize withdrawal transaction.
     *
     **/
-   function initializeWithdrawalTransaction(uint256 _amount) public {
+   function initializeWithdrawalTransaction(uint256 _amount) public payable {
         require(_amount > 0, "Amount to deposit must be greater than 0.");
         
         uint wtxID = nextTransactionID;
@@ -293,6 +293,36 @@ contract WakalaEscrow  {
       */
     function getTransactionByIndex(uint _transactionID) public view returns (WakalaTransaction memory) {
         WakalaTransaction memory wtx = escrowedPayments[_transactionID];
+        return wtx;
+    }
+
+    /**
+      * Gets the next unpaired transaction from the map.
+      * @param _transactionID the transaction id.
+      * @return the transaction in questsion.
+      */
+    function getNextUnpairedTransaction(uint _transactionID) public view returns (WakalaTransaction memory) {
+
+        uint transactionID = _transactionID;
+        WakalaTransaction storage wtx;
+
+        // prevent an extravagant loop.
+        if (_transactionID > nextTransactionID) {
+            transactionID = nextTransactionID;
+        }
+
+        // Loop through the transactions map by index.
+        for (int index = int(transactionID); index >= 0; index--) {
+                wtx = escrowedPayments[uint(index)];
+
+                if (wtx.agentAddress != address(0)) {
+                    // the next unparied transaction.
+                    return wtx;
+                }
+        }
+
+        // return empty wtx object.
+        wtx = escrowedPayments[nextTransactionID];
         return wtx;
     }
     
