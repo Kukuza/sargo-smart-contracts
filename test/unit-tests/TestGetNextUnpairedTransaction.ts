@@ -11,6 +11,33 @@ describe("Test Get Next un-paired transaction.", function () {
     expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(0);
 
     expect(
+      await testUtil.wakalaEscrow.initializeDepositTransaction(
+        5,
+        "test phone number"
+      )
+    )
+      .to.emit("WakalaEscrow", "TransactionInitEvent")
+      .withArgs(0, testUtil.user1Address.getAddress());
+
+    expect(
+      await testUtil.wakalaEscrow.initializeDepositTransaction(
+        5,
+        "test phone number"
+      )
+    )
+      .to.emit("WakalaEscrow", "TransactionInitEvent")
+      .withArgs(0, testUtil.user1Address.getAddress());
+
+    expect(
+      await testUtil.wakalaEscrow.initializeDepositTransaction(
+        5,
+        "test phone number"
+      )
+    )
+      .to.emit("WakalaEscrow", "TransactionInitEvent")
+      .withArgs(0, testUtil.user1Address.getAddress());
+
+    expect(
       await testUtil.wakalaEscrow.initializeWithdrawalTransaction(
         5,
         "test phone number"
@@ -22,15 +49,23 @@ describe("Test Get Next un-paired transaction.", function () {
     expect(
       await testUtil.wakalaEscrow
         .connect(testUtil.user2Address)
-        .agentAcceptWithdrawalTransaction(0, "test phone number")
+        .agentAcceptWithdrawalTransaction(3, "test phone number")
     )
       .to.emit("WakalaEscrow", "AgentPairingEvent")
       .withArgs(4, testUtil.user2Address.getAddress());
 
-    // expect(
+    // Exact value.
     const tx = await testUtil.wakalaEscrow
       .connect(testUtil.user2Address)
-      .getNextUnpairedTransaction(1);
-    expect(tx[4] === (await testUtil.user2Address.getAddress()));
+      .getNextUnpairedTransaction(2);
+
+    expect(tx.id).equal(2);
+
+    // Value above next tx index
+    const tx2 = await testUtil.wakalaEscrow
+      .connect(testUtil.user2Address)
+      .getNextUnpairedTransaction(10);
+
+    expect(tx2.id).equal(2);
   });
 });

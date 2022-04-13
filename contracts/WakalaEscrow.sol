@@ -323,12 +323,12 @@ contract WakalaEscrow  {
 
         // Loop through the transactions map by index.
         for (int index = int(transactionID); index >= 0; index--) {
-                wtx = escrowedPayments[uint(index)];
+            wtx = escrowedPayments[uint(index)];
 
-                if (wtx.agentAddress != address(0)) {
-                    // the next unparied transaction.
-                    return wtx;
-                }
+            if (wtx.clientAddress != address(0) && wtx.agentAddress == address(0)) {
+                // the next unparied transaction.
+                return wtx;
+            }
         }
 
         // return empty wtx object.
