@@ -10,7 +10,12 @@ describe("Test Initialize transactions.", function () {
 
     expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(0);
 
-    expect(await testUtil.wakalaEscrow.initializeWithdrawalTransaction(5))
+    expect(
+      await testUtil.wakalaEscrow.initializeWithdrawalTransaction(
+        5,
+        "test phone number"
+      )
+    )
       .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
 
@@ -26,7 +31,12 @@ describe("Test Initialize transactions.", function () {
 
     expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(0);
 
-    expect(await testUtil.wakalaEscrow.initializeDepositTransaction(100000000))
+    expect(
+      await testUtil.wakalaEscrow.initializeDepositTransaction(
+        100000000,
+        "test phone number"
+      )
+    )
       .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
 

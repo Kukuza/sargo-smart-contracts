@@ -70,6 +70,8 @@ contract WakalaEscrow  {
         uint256 grossAmount;
         bool agentApproval;
         bool clientApproval;
+        string agentPhoneNumber;
+        string clientPhoneNumber;
     }
 
     /**
@@ -99,9 +101,10 @@ contract WakalaEscrow  {
 
    /**
     * Client initialize withdrawal transaction.
-    *
+    * @param _amount the amount to be withdrawn.
+    * @param _phoneNumber the client`s phone number.
     **/
-   function initializeWithdrawalTransaction(uint256 _amount) public payable {
+   function initializeWithdrawalTransaction(uint256 _amount, string calldata _phoneNumber) public payable {
         require(_amount > 0, "Amount to deposit must be greater than 0.");
         
         uint wtxID = nextTransactionID;
@@ -118,6 +121,7 @@ contract WakalaEscrow  {
         newPayment.wakalaFee = wakalaFee;
         newPayment.grossAmount = grossAmount;
         newPayment.status = Status.AWAITING_AGENT;
+        newPayment.clientPhoneNumber = _phoneNumber;
         
         // newPayment.clientPhoneNo = keccak256(abi.encodePacked(_phoneNumber, encryptionKey));
         newPayment.agentApproval = false;
@@ -138,9 +142,11 @@ contract WakalaEscrow  {
    
    /**
     * Client initialize deposit transaction.
+    * @param _amount the amount to be deposited.
+    * @param _phoneNumber the client`s phone number.
     * 
     **/
-   function initializeDepositTransaction(uint256 _amount) public {
+   function initializeDepositTransaction(uint256 _amount, string calldata _phoneNumber) public {
         require(_amount > 0, "Amount to deposit must be greater than 0.");
         
         uint wtxID = nextTransactionID;
@@ -159,6 +165,7 @@ contract WakalaEscrow  {
         newPayment.wakalaFee = wakalaFee;
         newPayment.grossAmount = grossAmount;
         newPayment.status = Status.AWAITING_AGENT;
+        newPayment.clientPhoneNumber = _phoneNumber;
         
         // newPayment.clientPhoneNo = keccak256(abi.encodePacked(_phoneNumber, encryptionKey));
         newPayment.agentApproval = false;
@@ -170,8 +177,9 @@ contract WakalaEscrow  {
     /**
      * Marks pairs the client to an agent to attent to the transaction. 
      * @param _transactionid the identifire of the transaction.
+     * @param _phoneNumber the agents phone number.
      */
-    function agentAcceptWithdrawalTransaction(uint _transactionid) public 
+    function agentAcceptWithdrawalTransaction(uint _transactionid, string calldata _phoneNumber) public 
      awaitAgent(_transactionid) withdrawalsOnly(_transactionid)  {
          
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
@@ -180,6 +188,7 @@ contract WakalaEscrow  {
         
         wtx.agentAddress = msg.sender;
         wtx.status = Status.AWAITING_CONFIRMATIONS;
+        wtx.agentPhoneNumber = _phoneNumber;
         
         emit AgentPairingEvent(wtx);
     }
@@ -187,8 +196,9 @@ contract WakalaEscrow  {
     /**
      * Marks pairs the client to an agent to attent to the transaction. 
      * @param _transactionid the identifire of the transaction.
+     * @param _phoneNumber the agents phone number.
      */
-    function agentAcceptDepositTransaction(uint _transactionid) public
+    function agentAcceptDepositTransaction(uint _transactionid, string calldata _phoneNumber) public
         awaitAgent(_transactionid) depositsOnly(_transactionid)
         balanceGreaterThanAmount(_transactionid)
         payable {
@@ -208,7 +218,7 @@ contract WakalaEscrow  {
           ),
           "You don't have enough cUSD to accept this request."
         );
-        
+        wtx.agentPhoneNumber = _phoneNumber;
         emit AgentPairingEvent(wtx);
     }
     
