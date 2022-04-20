@@ -1,8 +1,9 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 
 pragma solidity ^0.8.4;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "hardhat/console.sol";
 
 contract WakalaEscrow  {
     
@@ -13,13 +14,15 @@ contract WakalaEscrow  {
     
     uint private nextTransactionID = 0; 
 
-    uint private agentFee  = 2500000000000000;
+    uint private agentFee  = 50000000000000000;
     
     uint private wakalaFee = 0;
 
+    uint private successfulTransactionsCounter = 0;
+
     event AgentPairingEvent(WakalaTransaction wtx);
 
-    event TransactionInitEvent(WakalaTransaction wtx);
+    event TransactionInitEvent(uint wtxIndex, address initiatorAddress);
     
     event ClientConfirmationEvent(WakalaTransaction wtx);
     
@@ -32,11 +35,11 @@ contract WakalaEscrow  {
      /**
       * Address of the cUSD token on Alfajores: 
       */
-    address internal cUsdTokenAddress = 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
+    address internal cUsdTokenAddress;
     
       // Maps unique payment IDs to escrowed payments.
       // These payment IDs are the temporary wallet addresses created with the escrowed payments.
-    mapping(uint => WakalaTransaction) public escrowedPayments;
+    mapping(uint => WakalaTransaction) private escrowedPayments;
     
     /**
      * An enum of the transaction types. either deposit or withdrawal.
@@ -61,26 +64,47 @@ contract WakalaEscrow  {
         address clientAddress;
         address agentAddress;
         Status status;
-        // bytes32 clientPhoneNo;
-        // bytes32 agentPhoneNo;
         uint256 amount;
         uint256 agentFee;
         uint256 wakalaFee;
         uint256 grossAmount;
         bool agentApproval;
         bool clientApproval;
+        string agentPhoneNumber;
+        string clientPhoneNumber;
     }
-   
-  
-//   constructor(string memory _encryptionKey) public {
-//       encryptionKey = _encryptionKey;
-//   }
-   
+
+    /**
+     * Constructor.
+     */
+    constructor(address _cUSDTokenAddress, uint256 _agentFee) {
+        cUsdTokenAddress = _cUSDTokenAddress;
+        if (_agentFee > 0) {
+            agentFee = _agentFee;
+        }        
+    }
+
+
+    /**
+     * Get the number of transactions in the smart contract.
+     */
+    function getNextTransactionIndex() public view returns(uint) {
+        return nextTransactionID;
+    }
+
+    /**
+     * Get the number of successful transactions within the smart contract.
+     */
+    function countSuccessfulTransactions() public view returns (uint) {
+        return  successfulTransactionsCounter;
+    }
+
    /**
     * Client initialize withdrawal transaction.
-    *
+    * @param _amount the amount to be withdrawn.
+    * @param _phoneNumber the client`s phone number.
     **/
-   function initializeWithdrawalTransaction(uint256 _amount) public returns(uint) {
+   function initializeWithdrawalTransaction(uint256 _amount, string calldata _phoneNumber) public payable {
         require(_amount > 0, "Amount to deposit must be greater than 0.");
         
         uint wtxID = nextTransactionID;
@@ -97,29 +121,32 @@ contract WakalaEscrow  {
         newPayment.wakalaFee = wakalaFee;
         newPayment.grossAmount = grossAmount;
         newPayment.status = Status.AWAITING_AGENT;
+        newPayment.clientPhoneNumber = _phoneNumber;
         
         // newPayment.clientPhoneNo = keccak256(abi.encodePacked(_phoneNumber, encryptionKey));
         newPayment.agentApproval = false;
         newPayment.clientApproval = false;
         
-        require(
-            ERC20(cUsdTokenAddress).transferFrom(
+        
+        ERC20(cUsdTokenAddress).transferFrom(
             msg.sender,
             address(this), 
-            grossAmount),
-            "You don't have enough cUSD to make this request."
-        );
+            grossAmount);
+        // require(
+        //     ,
+        //     "You don't have enough cUSD to make this request."
+        // );
     
-        emit TransactionInitEvent(newPayment);
-    
-        return wtxID;
+        emit TransactionInitEvent(wtxID, msg.sender);
    }
    
    /**
     * Client initialize deposit transaction.
+    * @param _amount the amount to be deposited.
+    * @param _phoneNumber the client`s phone number.
     * 
     **/
-   function initializeDepositTransaction(uint256 _amount) public returns(uint) {
+   function initializeDepositTransaction(uint256 _amount, string calldata _phoneNumber) public {
         require(_amount > 0, "Amount to deposit must be greater than 0.");
         
         uint wtxID = nextTransactionID;
@@ -138,21 +165,21 @@ contract WakalaEscrow  {
         newPayment.wakalaFee = wakalaFee;
         newPayment.grossAmount = grossAmount;
         newPayment.status = Status.AWAITING_AGENT;
+        newPayment.clientPhoneNumber = _phoneNumber;
         
         // newPayment.clientPhoneNo = keccak256(abi.encodePacked(_phoneNumber, encryptionKey));
         newPayment.agentApproval = false;
         newPayment.clientApproval = false;
         
-        emit TransactionInitEvent(newPayment);
-        
-        return wtxID;
+        emit TransactionInitEvent(wtxID, msg.sender);
    }
     
     /**
      * Marks pairs the client to an agent to attent to the transaction. 
      * @param _transactionid the identifire of the transaction.
+     * @param _phoneNumber the agents phone number.
      */
-    function agentAcceptWithdrawalTransaction(uint _transactionid) public 
+    function agentAcceptWithdrawalTransaction(uint _transactionid, string calldata _phoneNumber) public 
      awaitAgent(_transactionid) withdrawalsOnly(_transactionid)  {
          
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
@@ -161,6 +188,7 @@ contract WakalaEscrow  {
         
         wtx.agentAddress = msg.sender;
         wtx.status = Status.AWAITING_CONFIRMATIONS;
+        wtx.agentPhoneNumber = _phoneNumber;
         
         emit AgentPairingEvent(wtx);
     }
@@ -168,8 +196,9 @@ contract WakalaEscrow  {
     /**
      * Marks pairs the client to an agent to attent to the transaction. 
      * @param _transactionid the identifire of the transaction.
+     * @param _phoneNumber the agents phone number.
      */
-    function agentAcceptDepositTransaction(uint _transactionid) public
+    function agentAcceptDepositTransaction(uint _transactionid, string calldata _phoneNumber) public
         awaitAgent(_transactionid) depositsOnly(_transactionid)
         balanceGreaterThanAmount(_transactionid)
         payable {
@@ -189,7 +218,7 @@ contract WakalaEscrow  {
           ),
           "You don't have enough cUSD to accept this request."
         );
-        
+        wtx.agentPhoneNumber = _phoneNumber;
         emit AgentPairingEvent(wtx);
     }
     
@@ -219,8 +248,8 @@ contract WakalaEscrow  {
      * Agent comnfirms that the payment  has been made.
      */
     function agentConfirmPayment(uint _transactionid) public 
-    awaitConfirmation(_transactionid)
-    agentOnly(_transactionid) {
+        awaitConfirmation(_transactionid)
+        agentOnly(_transactionid) {
         
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         
@@ -262,9 +291,50 @@ contract WakalaEscrow  {
               "Transaction failed.");
         }
         
+        successfulTransactionsCounter++;
+        
         emit TransactionCompletionEvent(wtx);
     }
     
+    /**
+      * Gets transactions by index.
+      * @param _transactionID the transaction id.
+      * @return the transaction in questsion.
+      */
+    function getTransactionByIndex(uint _transactionID) public view returns (WakalaTransaction memory) {
+        WakalaTransaction memory wtx = escrowedPayments[_transactionID];
+        return wtx;
+    }
+
+    /**
+      * Gets the next unpaired transaction from the map.
+      * @param _transactionID the transaction id.
+      * @return the transaction in questsion.
+      */
+    function getNextUnpairedTransaction(uint _transactionID) public view returns (WakalaTransaction memory) {
+
+        uint transactionID = _transactionID;
+        WakalaTransaction storage wtx;
+
+        // prevent an extravagant loop.
+        if (_transactionID > nextTransactionID) {
+            transactionID = nextTransactionID;
+        }
+
+        // Loop through the transactions map by index.
+        for (int index = int(transactionID); index >= 0; index--) {
+            wtx = escrowedPayments[uint(index)];
+
+            if (wtx.clientAddress != address(0) && wtx.agentAddress == address(0)) {
+                // the next unparied transaction.
+                return wtx;
+            }
+        }
+
+        // return empty wtx object.
+        wtx = escrowedPayments[nextTransactionID];
+        return wtx;
+    }
     
     /**
      * Prevents users othe than the agent from running the logic.
