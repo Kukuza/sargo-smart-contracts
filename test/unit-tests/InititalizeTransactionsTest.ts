@@ -19,14 +19,26 @@ describe("Test Initialize transactions.", function () {
       .to.emit("KukuzaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
 
-    expect(await testUtil.kukuzaEscrow.getNextTransactionIndex()).to.equal(1);
-  });
-});
+    const kukuzaTx = testUtil.convertToKukuzaTransactionObj(
+      Array.from(
+        await testUtil.kukuzaEscrow.getTransactionByIndex(0),
+        (x) => `${x}`
+      )
+    );
 
-describe("Test Initialize transactions.", function () {
+    expect(kukuzaTx.id).to.equal(0);
+    expect(kukuzaTx.agentFee).to.equal(testUtil.agentFees);
+    expect(kukuzaTx.kukuzaFee).to.equal(testUtil.kukuzaFees);
+    expect(kukuzaTx.netAmount).to.equal(
+      5 - (testUtil.agentFees + testUtil.kukuzaFees)
+    );
+    expect(kukuzaTx.grossAmount).to.equal(5);
+  });
+
   it("Test initialize deposit transactions.", async function () {
     const testUtil = new TestUtil();
     await testUtil.intit();
+
     await testUtil.cUSD.approve(testUtil.kukuzaEscrow.address, 10);
 
     expect(await testUtil.kukuzaEscrow.getNextTransactionIndex()).to.equal(0);
@@ -40,8 +52,19 @@ describe("Test Initialize transactions.", function () {
       .to.emit("KukuzaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
 
-    expect(await testUtil.kukuzaEscrow.getTransactionByIndex(0)).to.not.be.null;
+    const kukuzaTx = testUtil.convertToKukuzaTransactionObj(
+      Array.from(
+        await testUtil.kukuzaEscrow.getTransactionByIndex(0),
+        (x) => `${x}`
+      )
+    );
 
-    expect(await testUtil.kukuzaEscrow.getNextTransactionIndex()).to.equal(1);
+    expect(kukuzaTx.id).to.equal(0);
+    expect(kukuzaTx.agentFee).to.equal(testUtil.agentFees);
+    expect(kukuzaTx.kukuzaFee).to.equal(testUtil.kukuzaFees);
+    expect(kukuzaTx.netAmount).to.equal(
+      5 - (testUtil.agentFees + testUtil.kukuzaFees)
+    );
+    expect(kukuzaTx.grossAmount).to.equal(5);
   });
 });
