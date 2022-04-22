@@ -5,7 +5,7 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "hardhat/console.sol";
 
-contract KukuzaEscrow  {
+contract WakalaEscrow  {
     
     /**
      * Encription keys used to enxcrypt phone numbers.
@@ -16,26 +16,26 @@ contract KukuzaEscrow  {
 
     uint private agentFee  = 50000000000000000;
     
-    uint private kukuzaFee = 40000000000000000;
+    uint private wakalaFee = 40000000000000000;
 
     uint private successfulTransactionsCounter = 0;
 
-    event AgentPairingEvent(KukuzaTransaction wtx);
+    event AgentPairingEvent(WakalaTransaction wtx);
 
     event TransactionInitEvent(uint wtxIndex, address initiatorAddress);
     
-    event ClientConfirmationEvent(KukuzaTransaction wtx);
+    event ClientConfirmationEvent(WakalaTransaction wtx);
     
-    event AgentConfirmationEvent(KukuzaTransaction wtx);
+    event AgentConfirmationEvent(WakalaTransaction wtx);
     
-    event ConfirmationCompletedEvent(KukuzaTransaction wtx);
+    event ConfirmationCompletedEvent(WakalaTransaction wtx);
     
-    event TransactionCompletionEvent(KukuzaTransaction wtx);
+    event TransactionCompletionEvent(WakalaTransaction wtx);
 
     /**
-     * Holds the kukuza treasury address funds. Default account for alfajores test net.
+     * Holds the wakala treasury address funds. Default account for alfajores test net.
      */
-    address internal kukuzaTreasuryAddress = 0xfF096016A3B65cdDa688a8f7237Ac94f3EFBa245;
+    address internal wakalaTreasuryAddress = 0xfF096016A3B65cdDa688a8f7237Ac94f3EFBa245;
     
      /**
       * Address of the cUSD (default token on Alfajores). 
@@ -44,7 +44,7 @@ contract KukuzaEscrow  {
     
       // Maps unique payment IDs to escrowed payments.
       // These payment IDs are the temporary wallet addresses created with the escrowed payments.
-    mapping(uint => KukuzaTransaction) private escrowedPayments;
+    mapping(uint => WakalaTransaction) private escrowedPayments;
     
     /**
      * An enum of the transaction types. either deposit or withdrawal.
@@ -63,7 +63,7 @@ contract KukuzaEscrow  {
     /**
      * Object of escrow transactions.
      **/
-    struct  KukuzaTransaction {
+    struct  WakalaTransaction {
         uint id;
         TransactionType txType;
         address clientAddress;
@@ -71,7 +71,7 @@ contract KukuzaEscrow  {
         Status status;
         uint256 netAmount;
         uint256 agentFee;
-        uint256 kukuzaFee;
+        uint256 wakalaFee;
         uint256 grossAmount;
         bool agentApproval;
         bool clientApproval;
@@ -83,7 +83,7 @@ contract KukuzaEscrow  {
      * Constructor.
      */
     constructor(address _cUSDTokenAddress, uint256 _agentFee,
-     uint256 _kukuzaFee, address _kukuzaTreasuryAddress) {
+     uint256 _wakalaFee, address _wakalaTreasuryAddress) {
         
         // Allow for default value.
         if (_cUSDTokenAddress != address(0)) {
@@ -91,8 +91,8 @@ contract KukuzaEscrow  {
         }
 
         // Allow for default value.
-        if (_kukuzaTreasuryAddress != address(0)) {
-            kukuzaTreasuryAddress = _kukuzaTreasuryAddress;
+        if (_wakalaTreasuryAddress != address(0)) {
+            wakalaTreasuryAddress = _wakalaTreasuryAddress;
         }
 
         // Allow for default value.
@@ -101,16 +101,16 @@ contract KukuzaEscrow  {
         }
 
         // Allow for default value.
-        if (_kukuzaFee > 0) {
-            kukuzaFee = _kukuzaFee;
+        if (_wakalaFee > 0) {
+            wakalaFee = _wakalaFee;
         }
     }
 
     /**
-     * Get the kukuza fees from the smart contract.
+     * Get the wakala fees from the smart contract.
      */
-    function getKukuzaFee() public view returns(uint) {
-        return kukuzaFee;
+    function getWakalaFee() public view returns(uint) {
+        return wakalaFee;
     }
 
     /**
@@ -146,14 +146,14 @@ contract KukuzaEscrow  {
         nextTransactionID++;
         
         uint grossAmount = _amount;
-        KukuzaTransaction storage newPayment = escrowedPayments[wtxID];
+        WakalaTransaction storage newPayment = escrowedPayments[wtxID];
         
         newPayment.clientAddress = msg.sender;
         newPayment.id = wtxID;
         newPayment.txType = TransactionType.WITHDRAWAL;
-        newPayment.netAmount = grossAmount - (kukuzaFee + agentFee);
+        newPayment.netAmount = grossAmount - (wakalaFee + agentFee);
         newPayment.agentFee = agentFee;
-        newPayment.kukuzaFee = kukuzaFee;
+        newPayment.wakalaFee = wakalaFee;
         newPayment.grossAmount = grossAmount;
         newPayment.status = Status.AWAITING_AGENT;
         newPayment.clientPhoneNumber = _phoneNumber;
@@ -183,16 +183,16 @@ contract KukuzaEscrow  {
         uint wtxID = nextTransactionID;
         nextTransactionID++;
         
-        KukuzaTransaction storage newPayment = escrowedPayments[wtxID];
+        WakalaTransaction storage newPayment = escrowedPayments[wtxID];
 
         uint grossAmount = _amount;
 
         newPayment.clientAddress = msg.sender;
         newPayment.id = wtxID;
         newPayment.txType = TransactionType.DEPOSIT;
-        newPayment.netAmount = grossAmount - (kukuzaFee + agentFee);
+        newPayment.netAmount = grossAmount - (wakalaFee + agentFee);
         newPayment.agentFee = agentFee;
-        newPayment.kukuzaFee = kukuzaFee;
+        newPayment.wakalaFee = wakalaFee;
         newPayment.grossAmount = grossAmount;
         newPayment.status = Status.AWAITING_AGENT;
         newPayment.clientPhoneNumber = _phoneNumber;
@@ -212,7 +212,7 @@ contract KukuzaEscrow  {
     function agentAcceptWithdrawalTransaction(uint _transactionid, string calldata _phoneNumber) public 
      awaitAgent(_transactionid) withdrawalsOnly(_transactionid)  {
          
-        KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         
         require(wtx.clientAddress != msg.sender);
         
@@ -233,7 +233,7 @@ contract KukuzaEscrow  {
         balanceGreaterThanAmount(_transactionid)
         payable {
         
-        KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         
         require(wtx.clientAddress != msg.sender);
 
@@ -260,7 +260,7 @@ contract KukuzaEscrow  {
      awaitConfirmation(_transactionid)
      clientOnly(_transactionid) {
         
-        KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         
         require(!wtx.clientApproval, "Client already confirmed payment!!");
         wtx.clientApproval = true;
@@ -281,7 +281,7 @@ contract KukuzaEscrow  {
         awaitConfirmation(_transactionid)
         agentOnly(_transactionid) {
         
-        KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         
         require(!wtx.agentApproval, "Agent already confirmed payment!!");
         wtx.agentApproval = true;
@@ -300,7 +300,7 @@ contract KukuzaEscrow  {
      **/ 
     function finalizeTransaction(uint _transactionid) private {
         
-        KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         
         require(wtx.clientAddress == msg.sender || wtx.agentAddress == msg.sender,
             "Only the involved parties can finalize the transaction.!!");
@@ -323,7 +323,7 @@ contract KukuzaEscrow  {
               "Agent fee transfer failed.");
         
         // Transafer the agents total (amount + agent fees)
-        require(ERC20(cUsdTokenAddress).transfer(kukuzaTreasuryAddress, wtx.kukuzaFee),
+        require(ERC20(cUsdTokenAddress).transfer(wakalaTreasuryAddress, wtx.wakalaFee),
               "Transaction fee transfer failed.");
 
         successfulTransactionsCounter++;
@@ -336,8 +336,8 @@ contract KukuzaEscrow  {
       * @param _transactionID the transaction id.
       * @return the transaction in questsion.
       */
-    function getTransactionByIndex(uint _transactionID) public view returns (KukuzaTransaction memory) {
-        KukuzaTransaction memory wtx = escrowedPayments[_transactionID];
+    function getTransactionByIndex(uint _transactionID) public view returns (WakalaTransaction memory) {
+        WakalaTransaction memory wtx = escrowedPayments[_transactionID];
         return wtx;
     }
 
@@ -346,10 +346,10 @@ contract KukuzaEscrow  {
       * @param _transactionID the transaction id.
       * @return the transaction in questsion.
       */
-    function getNextUnpairedTransaction(uint _transactionID) public view returns (KukuzaTransaction memory) {
+    function getNextUnpairedTransaction(uint _transactionID) public view returns (WakalaTransaction memory) {
 
         uint transactionID = _transactionID;
-        KukuzaTransaction storage wtx;
+        WakalaTransaction storage wtx;
 
         // prevent an extravagant loop.
         if (_transactionID > nextTransactionID) {
@@ -376,7 +376,7 @@ contract KukuzaEscrow  {
      * @param _transactionid the transaction being processed.
      */
     modifier agentOnly(uint _transactionid) {
-        KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         require(msg.sender == wtx.agentAddress, "Method can only be called by the agent");
         _;
     }
@@ -385,7 +385,7 @@ contract KukuzaEscrow  {
      * Run the method for deposit transactions only.
      */
     modifier depositsOnly(uint _transactionid) {
-         KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         require(wtx.txType == TransactionType.DEPOSIT, 
             "Method can only be called for deposit transactions only!!");
         _;
@@ -396,7 +396,7 @@ contract KukuzaEscrow  {
      * @param _transactionid the transaction being processed.
      */
     modifier withdrawalsOnly(uint _transactionid) {
-        KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         require(wtx.txType == TransactionType.WITHDRAWAL,
         "Method can only be called for withdrawal transactions only!!");
         _;
@@ -407,7 +407,7 @@ contract KukuzaEscrow  {
      * @param _transactionid the transaction being processed.
      */
     modifier clientOnly(uint _transactionid) {
-        KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         require(msg.sender == wtx.clientAddress, "Method can only be called by the client!!");
         _;
     }
@@ -417,7 +417,7 @@ contract KukuzaEscrow  {
      * @param _transactionid the transaction being processed.
      */
     modifier awaitConfirmation(uint _transactionid) {
-        KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         require(wtx.status == Status.AWAITING_CONFIRMATIONS);
         _;
     }
@@ -427,7 +427,7 @@ contract KukuzaEscrow  {
      * @param _transactionid the transaction being processed.
      */
     modifier awaitAgent(uint _transactionid) {
-        KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         require(wtx.status == Status.AWAITING_AGENT);
         _;
     }
@@ -437,7 +437,7 @@ contract KukuzaEscrow  {
      * @param _transactionid the transaction being processed.
      */
     modifier balanceGreaterThanAmount(uint _transactionid) {
-        KukuzaTransaction storage wtx = escrowedPayments[_transactionid];
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         require(ERC20(cUsdTokenAddress).balanceOf(address(msg.sender)) > wtx.grossAmount,
             "Your balance must be greater than the transaction gross amount.");
         _;

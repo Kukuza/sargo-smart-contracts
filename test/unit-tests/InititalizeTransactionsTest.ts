@@ -6,65 +6,65 @@ describe("Test Initialize transactions.", function () {
     const testUtil = new TestUtil();
     await testUtil.intit();
 
-    await testUtil.cUSD.approve(testUtil.kukuzaEscrow.address, 10);
+    await testUtil.cUSD.approve(testUtil.wakalaEscrow.address, 10);
 
-    expect(await testUtil.kukuzaEscrow.getNextTransactionIndex()).to.equal(0);
+    expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(0);
 
     expect(
-      await testUtil.kukuzaEscrow.initializeWithdrawalTransaction(
+      await testUtil.wakalaEscrow.initializeWithdrawalTransaction(
         5,
         "test phone number"
       )
     )
-      .to.emit("KukuzaEscrow", "TransactionInitEvent")
+      .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
 
-    const kukuzaTx = testUtil.convertToKukuzaTransactionObj(
+    const wakalaTx = testUtil.convertToWakalaTransactionObj(
       Array.from(
-        await testUtil.kukuzaEscrow.getTransactionByIndex(0),
+        await testUtil.wakalaEscrow.getTransactionByIndex(0),
         (x) => `${x}`
       )
     );
 
-    expect(kukuzaTx.id).to.equal(0);
-    expect(kukuzaTx.agentFee).to.equal(testUtil.agentFees);
-    expect(kukuzaTx.kukuzaFee).to.equal(testUtil.kukuzaFees);
-    expect(kukuzaTx.netAmount).to.equal(
-      5 - (testUtil.agentFees + testUtil.kukuzaFees)
+    expect(wakalaTx.id).to.equal(0);
+    expect(wakalaTx.agentFee).to.equal(testUtil.agentFees);
+    expect(wakalaTx.wakalaFee).to.equal(testUtil.wakalaFees);
+    expect(wakalaTx.netAmount).to.equal(
+      5 - (testUtil.agentFees + testUtil.wakalaFees)
     );
-    expect(kukuzaTx.grossAmount).to.equal(5);
+    expect(wakalaTx.grossAmount).to.equal(5);
   });
 
   it("Test initialize deposit transactions.", async function () {
     const testUtil = new TestUtil();
     await testUtil.intit();
 
-    await testUtil.cUSD.approve(testUtil.kukuzaEscrow.address, 10);
+    await testUtil.cUSD.approve(testUtil.wakalaEscrow.address, 10);
 
-    expect(await testUtil.kukuzaEscrow.getNextTransactionIndex()).to.equal(0);
+    expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(0);
 
     expect(
-      await testUtil.kukuzaEscrow.initializeDepositTransaction(
+      await testUtil.wakalaEscrow.initializeDepositTransaction(
         5,
         "test phone number"
       )
     )
-      .to.emit("KukuzaEscrow", "TransactionInitEvent")
+      .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
 
-    const kukuzaTx = testUtil.convertToKukuzaTransactionObj(
+    const wakalaTx = testUtil.convertToWakalaTransactionObj(
       Array.from(
-        await testUtil.kukuzaEscrow.getTransactionByIndex(0),
+        await testUtil.wakalaEscrow.getTransactionByIndex(0),
         (x) => `${x}`
       )
     );
 
-    expect(kukuzaTx.id).to.equal(0);
-    expect(kukuzaTx.agentFee).to.equal(testUtil.agentFees);
-    expect(kukuzaTx.kukuzaFee).to.equal(testUtil.kukuzaFees);
-    expect(kukuzaTx.netAmount).to.equal(
-      5 - (testUtil.agentFees + testUtil.kukuzaFees)
+    expect(wakalaTx.id).to.equal(0);
+    expect(wakalaTx.agentFee).to.equal(testUtil.agentFees);
+    expect(wakalaTx.wakalaFee).to.equal(testUtil.wakalaFees);
+    expect(wakalaTx.netAmount).to.equal(
+      5 - (testUtil.agentFees + testUtil.wakalaFees)
     );
-    expect(kukuzaTx.grossAmount).to.equal(5);
+    expect(wakalaTx.grossAmount).to.equal(5);
   });
 });

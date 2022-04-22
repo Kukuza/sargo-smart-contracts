@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
-import { KukuzaEscrow } from "../typechain/KukuzaEscrow";
+import { WakalaEscrow } from "../typechain/WakalaEscrow";
 
 /**
  * @typedef {Object} WakalaEscrowTransaction Wakala escrow transaction object.
@@ -26,7 +26,7 @@ export type WakalaEscrowTransaction = {
   status: number;
   netAmount: number;
   agentAddress?: string;
-  kukuzaFee: number;
+  wakalaFee: number;
   grossAmount: number;
   agentFee: number;
   agentApproval: string;
@@ -37,17 +37,17 @@ export type WakalaEscrowTransaction = {
 
 export class TestUtil {
   public cUSD!: Contract;
-  public kukuzaEscrow!: KukuzaEscrow;
+  public wakalaEscrow!: WakalaEscrow;
   public user1Address!: SignerWithAddress;
   public user2Address!: SignerWithAddress;
-  public kukuzaTreasury!: SignerWithAddress;
-  public kukuzaFees = 1;
+  public wakalaTreasury!: SignerWithAddress;
+  public wakalaFees = 1;
   public agentFees = 2;
 
   //   constructor() {}
 
   async intit() {
-    const [owner, address2, kukuzaTreasury] = await ethers.getSigners();
+    const [owner, address2, wakalaTreasury] = await ethers.getSigners();
 
     const CUSD = await ethers.getContractFactory("cUSD");
     const cUSD = await CUSD.deploy(100, "cUSD", 0, "cUSD");
@@ -55,19 +55,19 @@ export class TestUtil {
 
     this.cUSD = cUSD;
 
-    const KukuzaEscrow = await ethers.getContractFactory("KukuzaEscrow");
-    const kukuzaEscrow = await KukuzaEscrow.deploy(
+    const WakalaEscrow = await ethers.getContractFactory("WakalaEscrow");
+    const wakalaEscrow = await WakalaEscrow.deploy(
       cUSD.address,
       this.agentFees,
-      this.kukuzaFees,
-      kukuzaTreasury.address
+      this.wakalaFees,
+      wakalaTreasury.address
     );
-    await kukuzaEscrow.deployed();
+    await wakalaEscrow.deployed();
 
-    this.kukuzaEscrow = kukuzaEscrow;
+    this.wakalaEscrow = wakalaEscrow;
     this.user1Address = owner;
     this.user2Address = address2;
-    this.kukuzaTreasury = kukuzaTreasury;
+    this.wakalaTreasury = wakalaTreasury;
   }
 
   /**
@@ -75,7 +75,7 @@ export class TestUtil {
    * @param tx the response object.
    * @returns the wakala transaction object.
    */
-  convertToKukuzaTransactionObj(tx: string[]): WakalaEscrowTransaction {
+  convertToWakalaTransactionObj(tx: string[]): WakalaEscrowTransaction {
     const wakalaTx: WakalaEscrowTransaction = {
       id: parseInt(tx[0]),
       txType: parseInt(tx[1]),
@@ -84,7 +84,7 @@ export class TestUtil {
       status: parseInt(tx[4]),
       netAmount: parseInt(tx[5]),
       agentFee: parseInt(tx[6]),
-      kukuzaFee: parseInt(tx[7]),
+      wakalaFee: parseInt(tx[7]),
       grossAmount: parseInt(tx[8]),
       agentApproval: tx[9],
       clientApproval: tx[10],
