@@ -2,14 +2,8 @@ node_modules
 .env
 coverage
 coverage.json
-# typechain
+typechain
 
 #Hardhat files
 cache
 artifacts
-
-# Git ignore typechain exceptions.
-# tool ===> https://theapache64.github.io/git-do-not-ignore/ 
-!typechain/
-typechain/*
-!typechain/WakalaEscrow.d.ts
