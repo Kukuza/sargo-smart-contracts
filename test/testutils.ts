@@ -36,7 +36,7 @@ export type WakalaEscrowTransaction = {
 
 export class TestUtil {
   public cUSD!: Contract;
-  public wakalaEscrow!: any;
+  public wakalaEscrow!: Contract;
   public user1Address!: SignerWithAddress;
   public user2Address!: SignerWithAddress;
   public wakalaTreasury!: SignerWithAddress;

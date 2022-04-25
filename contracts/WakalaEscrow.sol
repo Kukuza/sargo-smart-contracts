@@ -175,7 +175,6 @@ contract WakalaEscrow  {
     * Client initialize deposit transaction.
     * @param _amount the amount to be deposited.
     * @param _phoneNumber the client`s phone number.
-    * 
     **/
    function initializeDepositTransaction(uint256 _amount, string calldata _phoneNumber) public {
         require(_amount > 0, "Amount to deposit must be greater than 0.");
@@ -291,27 +290,28 @@ contract WakalaEscrow  {
         if (wtx.clientApproval) {
             wtx.status = Status.CONFIRMED;
             emit ConfirmationCompletedEvent(wtx);
-            finalizeTransaction(_transactionid);
+            // finalizeTransaction(_transactionid);
         }
     }
     
     /**
      * Can be automated in the frontend by use of event listeners. eg on confirmation event.
      **/ 
-    function finalizeTransaction(uint _transactionid) private {
+    function finalizeTransaction(uint _transactionid) public {
         
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        
+        console.log(wtx.agentFee, wtx.netAmount, wtx.grossAmount, wtx.wakalaFee);
         require(wtx.clientAddress == msg.sender || wtx.agentAddress == msg.sender,
             "Only the involved parties can finalize the transaction.!!");
        
-        require(wtx.status == Status.CONFIRMED, "Contract not yet confirmed by both parties!!");
+        require(wtx.status == Status.CONFIRMED, "Transaction not yet confirmed by both parties!!");
         
-        wtx.status = Status.DONE;
         
         if (wtx.txType == TransactionType.DEPOSIT) {
-            require(ERC20(cUsdTokenAddress).transfer(wtx.clientAddress, wtx.netAmount),
-              "Transaction failed.");
+            console.log(cUsdTokenAddress, wtx.clientAddress, ERC20(cUsdTokenAddress).balanceOf(address(this)));
+            ERC20(cUsdTokenAddress).transfer(
+                wtx.clientAddress,
+                wtx.netAmount);
         } else {
             // Transafer the amount to the agent address.
             require(ERC20(cUsdTokenAddress).transfer(wtx.agentAddress, wtx.netAmount),
@@ -327,6 +327,8 @@ contract WakalaEscrow  {
               "Transaction fee transfer failed.");
 
         successfulTransactionsCounter++;
+
+        wtx.status = Status.DONE;
         
         emit TransactionCompletionEvent(wtx);
     }
