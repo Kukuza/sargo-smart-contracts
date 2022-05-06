@@ -88,7 +88,7 @@ contract cUSD {
     /**
      * Transfer functions
      */
-    function transfer(address _to, uint256 _value) public {
+    function transfer(address _to, uint256 _value) public returns (bool success) {
         require(_to != address(this));
         require(_to != address(0), "Cannot use zero address");
         require(_value > 0, "Cannot use zero value");
@@ -104,6 +104,8 @@ contract cUSD {
         emit Transfer(msg.sender, _to, _value);                                  // Notify anyone listening that this transfer took place
         
         assert(balanceOf[msg.sender] + balanceOf[_to] == previousBalances);
+
+        return true;
     }
 
     function approve(address _spender, uint256 _value) public returns (bool success) {

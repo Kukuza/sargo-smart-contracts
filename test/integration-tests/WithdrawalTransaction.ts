@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { BigNumber } from "ethers";
-import { TestUtil } from "../testutils";
+import { TestUtil, WakalaEscrowTransaction } from "../testutils";
 
 describe("Withdrawal E2E", function () {
   it("Test end to end withdrawal tx", async function () {
@@ -15,7 +15,7 @@ describe("Withdrawal E2E", function () {
 
     await testUtil.cUSD.approve(testUtil.wakalaEscrow.address, 10);
 
-    console.log(testUtil.cUSD.address)
+    console.log(testUtil.cUSD.address);
     expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(0);
 
     let agentBalance = await testUtil.cUSD.balanceOf(agentAddress);
@@ -86,32 +86,21 @@ describe("Withdrawal E2E", function () {
     // Check balances after method call.
     agentBalance = await testUtil.cUSD.balanceOf(agentAddress);
     clientBalance = await testUtil.cUSD.balanceOf(clientAddress);
-    expect(agentBalance).to.equal(BigNumber.from("95"));
-    expect(clientBalance).to.equal(BigNumber.from("0"));
-
-    // Agent confirm transaction.
-    expect(
-      await testUtil.wakalaEscrow.connect(agentSigner).finalizeTransaction(0)
-    )
-      .to.emit("WakalaEscrow", "TransactionCompletionEvent")
-      .withArgs(
-        0,
-        testUtil.user1Address.getAddress(),
-        testUtil.user2Address.getAddress()
-      );
-
-    // Check balances after method call.
-    agentBalance = await testUtil.cUSD.balanceOf(agentAddress);
-    clientBalance = await testUtil.cUSD.balanceOf(clientAddress);
-    expect(agentBalance).to.equal(BigNumber.from("95"));
+    const wakalaTreasury = await testUtil.cUSD.balanceOf(
+      testUtil.wakalaTreasury.address
+    );
+    expect(wakalaTreasury).to.equal(BigNumber.from("1"));
+    expect(agentBalance).to.equal(BigNumber.from("97"));
     expect(clientBalance).to.equal(BigNumber.from("2"));
 
-    // // Value above next tx index
-    // // const tx2 = await testUtil.wakalaEscrow
-    // //   .connect(testUtil.user2Address)
-    // //   .getNextUnpairedTransaction(10);
-
-    // // expect(tx2.id).equal(0);
-    // // expect(tx2).equal(0);
+    // Value above next tx index
+    const tx2: WakalaEscrowTransaction = testUtil.convertToWakalaTransactionObj(
+      await testUtil.wakalaEscrow
+        .connect(testUtil.user2Address)
+        .getTransactionByIndex(0)
+    );
+    console.log(tx2);
+    expect(tx2.id).equal(0);
+    expect(tx2.status).equal(4);
   });
 });

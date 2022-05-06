@@ -290,7 +290,7 @@ contract WakalaEscrow  {
         if (wtx.clientApproval) {
             wtx.status = Status.CONFIRMED;
             emit ConfirmationCompletedEvent(wtx);
-            // finalizeTransaction(_transactionid);
+            finalizeTransaction(_transactionid);
         }
     }
     
@@ -300,7 +300,6 @@ contract WakalaEscrow  {
     function finalizeTransaction(uint _transactionid) public {
         
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        console.log(wtx.agentFee, wtx.netAmount, wtx.grossAmount, wtx.wakalaFee);
         require(wtx.clientAddress == msg.sender || wtx.agentAddress == msg.sender,
             "Only the involved parties can finalize the transaction.!!");
        
@@ -308,7 +307,6 @@ contract WakalaEscrow  {
         
         
         if (wtx.txType == TransactionType.DEPOSIT) {
-            console.log(cUsdTokenAddress, wtx.clientAddress, ERC20(cUsdTokenAddress).balanceOf(address(this)));
             ERC20(cUsdTokenAddress).transfer(
                 wtx.clientAddress,
                 wtx.netAmount);
@@ -319,11 +317,15 @@ contract WakalaEscrow  {
         }
 
         // Transafer the agents fees to the agents address.
-        require(ERC20(cUsdTokenAddress).transfer(wtx.agentAddress, wtx.agentFee),
+        require(ERC20(cUsdTokenAddress).transfer(
+                wtx.agentAddress,
+                wtx.agentFee),
               "Agent fee transfer failed.");
         
         // Transafer the agents total (amount + agent fees)
-        require(ERC20(cUsdTokenAddress).transfer(wakalaTreasuryAddress, wtx.wakalaFee),
+        require(ERC20(cUsdTokenAddress).transfer(
+                wakalaTreasuryAddress,
+                wtx.wakalaFee),
               "Transaction fee transfer failed.");
 
         successfulTransactionsCounter++;
