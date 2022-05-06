@@ -2,7 +2,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
-import { WakalaEscrow } from "../typechain/WakalaEscrow";
+// import { WakalaEscrow } from "../typechain/WakalaEscrow";
 
 /**
  * @typedef {Object} WakalaEscrowTransaction Wakala escrow transaction object.
