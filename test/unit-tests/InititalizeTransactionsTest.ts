@@ -19,29 +19,52 @@ describe("Test Initialize transactions.", function () {
       .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
 
-    expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(1);
-  });
-});
+    const wakalaTx = testUtil.convertToWakalaTransactionObj(
+      Array.from(
+        await testUtil.wakalaEscrow.getTransactionByIndex(0),
+        (x) => `${x}`
+      )
+    );
 
-describe("Test Initialize transactions.", function () {
+    expect(wakalaTx.id).to.equal(0);
+    expect(wakalaTx.agentFee).to.equal(testUtil.agentFees);
+    expect(wakalaTx.wakalaFee).to.equal(testUtil.wakalaFees);
+    expect(wakalaTx.netAmount).to.equal(
+      5 - (testUtil.agentFees + testUtil.wakalaFees)
+    );
+    expect(wakalaTx.grossAmount).to.equal(5);
+  });
+
   it("Test initialize deposit transactions.", async function () {
     const testUtil = new TestUtil();
     await testUtil.intit();
+
     await testUtil.cUSD.approve(testUtil.wakalaEscrow.address, 10);
 
     expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(0);
 
     expect(
       await testUtil.wakalaEscrow.initializeDepositTransaction(
-        100000000,
+        5,
         "test phone number"
       )
     )
       .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
 
-    expect(await testUtil.wakalaEscrow.getTransactionByIndex(0)).to.not.be.null;
+    const wakalaTx = testUtil.convertToWakalaTransactionObj(
+      Array.from(
+        await testUtil.wakalaEscrow.getTransactionByIndex(0),
+        (x) => `${x}`
+      )
+    );
 
-    expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(1);
+    expect(wakalaTx.id).to.equal(0);
+    expect(wakalaTx.agentFee).to.equal(testUtil.agentFees);
+    expect(wakalaTx.wakalaFee).to.equal(testUtil.wakalaFees);
+    expect(wakalaTx.netAmount).to.equal(
+      5 - (testUtil.agentFees + testUtil.wakalaFees)
+    );
+    expect(wakalaTx.grossAmount).to.equal(5);
   });
 });

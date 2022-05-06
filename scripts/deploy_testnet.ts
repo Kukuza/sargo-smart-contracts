@@ -15,11 +15,8 @@ async function main() {
 
   // We get the contract to deploy
   const WakalaEscrow = await ethers.getContractFactory("WakalaEscrow");
-  const wakalaEscrow = await WakalaEscrow.deploy(
-    "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1",
-    0
-  );
- 
+  const wakalaEscrow = await WakalaEscrow.deploy("", 0, 0, "");
+
   await wakalaEscrow.deployed();
 
   console.log("WakalaEscrow deployed to: { ", wakalaEscrow.address, " } ");

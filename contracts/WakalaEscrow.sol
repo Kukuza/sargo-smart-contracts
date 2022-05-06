@@ -16,7 +16,7 @@ contract WakalaEscrow  {
 
     uint private agentFee  = 50000000000000000;
     
-    uint private wakalaFee = 0;
+    uint private wakalaFee = 40000000000000000;
 
     uint private successfulTransactionsCounter = 0;
 
@@ -31,11 +31,16 @@ contract WakalaEscrow  {
     event ConfirmationCompletedEvent(WakalaTransaction wtx);
     
     event TransactionCompletionEvent(WakalaTransaction wtx);
+
+    /**
+     * Holds the wakala treasury address funds. Default account for alfajores test net.
+     */
+    address internal wakalaTreasuryAddress = 0xfF096016A3B65cdDa688a8f7237Ac94f3EFBa245;
     
      /**
-      * Address of the cUSD token on Alfajores: 
+      * Address of the cUSD (default token on Alfajores). 
       */
-    address internal cUsdTokenAddress;
+    address internal cUsdTokenAddress = 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
     
       // Maps unique payment IDs to escrowed payments.
       // These payment IDs are the temporary wallet addresses created with the escrowed payments.
@@ -64,7 +69,7 @@ contract WakalaEscrow  {
         address clientAddress;
         address agentAddress;
         Status status;
-        uint256 amount;
+        uint256 netAmount;
         uint256 agentFee;
         uint256 wakalaFee;
         uint256 grossAmount;
@@ -77,13 +82,43 @@ contract WakalaEscrow  {
     /**
      * Constructor.
      */
-    constructor(address _cUSDTokenAddress, uint256 _agentFee) {
-        cUsdTokenAddress = _cUSDTokenAddress;
+    constructor(address _cUSDTokenAddress, uint256 _agentFee,
+     uint256 _wakalaFee, address _wakalaTreasuryAddress) {
+        
+        // Allow for default value.
+        if (_cUSDTokenAddress != address(0)) {
+            cUsdTokenAddress = _cUSDTokenAddress;
+        }
+
+        // Allow for default value.
+        if (_wakalaTreasuryAddress != address(0)) {
+            wakalaTreasuryAddress = _wakalaTreasuryAddress;
+        }
+
+        // Allow for default value.
         if (_agentFee > 0) {
             agentFee = _agentFee;
-        }        
+        }
+
+        // Allow for default value.
+        if (_wakalaFee > 0) {
+            wakalaFee = _wakalaFee;
+        }
     }
 
+    /**
+     * Get the wakala fees from the smart contract.
+     */
+    function getWakalaFee() public view returns(uint) {
+        return wakalaFee;
+    }
+
+    /**
+     * Get the agent fees from the smart contract.
+     */
+    function getAgentFee() public view returns(uint) {
+        return agentFee;
+    }
 
     /**
      * Get the number of transactions in the smart contract.
@@ -110,13 +145,13 @@ contract WakalaEscrow  {
         uint wtxID = nextTransactionID;
         nextTransactionID++;
         
-        uint grossAmount = wakalaFee + agentFee + _amount;
+        uint grossAmount = _amount;
         WakalaTransaction storage newPayment = escrowedPayments[wtxID];
         
         newPayment.clientAddress = msg.sender;
         newPayment.id = wtxID;
         newPayment.txType = TransactionType.WITHDRAWAL;
-        newPayment.amount = _amount;
+        newPayment.netAmount = grossAmount - (wakalaFee + agentFee);
         newPayment.agentFee = agentFee;
         newPayment.wakalaFee = wakalaFee;
         newPayment.grossAmount = grossAmount;
@@ -132,10 +167,6 @@ contract WakalaEscrow  {
             msg.sender,
             address(this), 
             grossAmount);
-        // require(
-        //     ,
-        //     "You don't have enough cUSD to make this request."
-        // );
     
         emit TransactionInitEvent(wtxID, msg.sender);
    }
@@ -144,7 +175,6 @@ contract WakalaEscrow  {
     * Client initialize deposit transaction.
     * @param _amount the amount to be deposited.
     * @param _phoneNumber the client`s phone number.
-    * 
     **/
    function initializeDepositTransaction(uint256 _amount, string calldata _phoneNumber) public {
         require(_amount > 0, "Amount to deposit must be greater than 0.");
@@ -153,14 +183,13 @@ contract WakalaEscrow  {
         nextTransactionID++;
         
         WakalaTransaction storage newPayment = escrowedPayments[wtxID];
-        
-        uint netFee = wakalaFee + agentFee;
-        uint grossAmount = netFee + _amount;
-        
+
+        uint grossAmount = _amount;
+
         newPayment.clientAddress = msg.sender;
         newPayment.id = wtxID;
         newPayment.txType = TransactionType.DEPOSIT;
-        newPayment.amount = _amount;
+        newPayment.netAmount = grossAmount - (wakalaFee + agentFee);
         newPayment.agentFee = agentFee;
         newPayment.wakalaFee = wakalaFee;
         newPayment.grossAmount = grossAmount;
@@ -268,30 +297,40 @@ contract WakalaEscrow  {
     /**
      * Can be automated in the frontend by use of event listeners. eg on confirmation event.
      **/ 
-    function finalizeTransaction(uint _transactionid) private {
+    function finalizeTransaction(uint _transactionid) public {
         
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        
         require(wtx.clientAddress == msg.sender || wtx.agentAddress == msg.sender,
             "Only the involved parties can finalize the transaction.!!");
        
-        require(wtx.status == Status.CONFIRMED, "Contract not yet confirmed by both parties!!");
+        require(wtx.status == Status.CONFIRMED, "Transaction not yet confirmed by both parties!!");
         
-        wtx.status = Status.DONE;
         
         if (wtx.txType == TransactionType.DEPOSIT) {
-            require(ERC20(cUsdTokenAddress).transfer(wtx.clientAddress, wtx.amount),
-              "Transaction failed.");
-              
-            require(ERC20(cUsdTokenAddress).transfer(wtx.agentAddress, wtx.agentFee),
-              "Transaction failed.");
+            ERC20(cUsdTokenAddress).transfer(
+                wtx.clientAddress,
+                wtx.netAmount);
         } else {
-            
-            require(ERC20(cUsdTokenAddress).transfer(wtx.agentAddress, wtx.amount + wtx.agentFee),
+            // Transafer the amount to the agent address.
+            require(ERC20(cUsdTokenAddress).transfer(wtx.agentAddress, wtx.netAmount),
               "Transaction failed.");
         }
+
+        // Transafer the agents fees to the agents address.
+        require(ERC20(cUsdTokenAddress).transfer(
+                wtx.agentAddress,
+                wtx.agentFee),
+              "Agent fee transfer failed.");
         
+        // Transafer the agents total (amount + agent fees)
+        require(ERC20(cUsdTokenAddress).transfer(
+                wakalaTreasuryAddress,
+                wtx.wakalaFee),
+              "Transaction fee transfer failed.");
+
         successfulTransactionsCounter++;
+
+        wtx.status = Status.DONE;
         
         emit TransactionCompletionEvent(wtx);
     }
