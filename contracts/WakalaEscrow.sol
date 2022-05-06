@@ -209,12 +209,10 @@ contract WakalaEscrow  {
      * @param _phoneNumber the agents phone number.
      */
     function agentAcceptWithdrawalTransaction(uint _transactionid, string calldata _phoneNumber) public 
-     awaitAgent(_transactionid) withdrawalsOnly(_transactionid)  {
+     awaitAgent(_transactionid) withdrawalsOnly(_transactionid) agentOnly(_transactionid) {
          
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        
-        require(wtx.clientAddress != msg.sender);
-        
+
         wtx.agentAddress = msg.sender;
         wtx.status = Status.AWAITING_CONFIRMATIONS;
         wtx.agentPhoneNumber = _phoneNumber;
@@ -229,12 +227,11 @@ contract WakalaEscrow  {
      */
     function agentAcceptDepositTransaction(uint _transactionid, string calldata _phoneNumber) public
         awaitAgent(_transactionid) depositsOnly(_transactionid)
+        agentOnly(_transactionid)
         balanceGreaterThanAmount(_transactionid)
         payable {
         
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        
-        require(wtx.clientAddress != msg.sender);
 
         wtx.agentAddress = msg.sender;
         wtx.status = Status.AWAITING_CONFIRMATIONS;
@@ -417,12 +414,12 @@ contract WakalaEscrow  {
     }
     
     /**
-     * Prevents users othe than the client from running the logic.
+     * Only alows method to be excecuted in tx in question is waiting confirmation.
      * @param _transactionid the transaction being processed.
      */
     modifier awaitConfirmation(uint _transactionid) {
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        require(wtx.status == Status.AWAITING_CONFIRMATIONS);
+        require(wtx.status == Status.AWAITING_CONFIRMATIONS, "Transaction is not awaiting confirmation from anyone.");
         _;
     }
     
@@ -432,7 +429,7 @@ contract WakalaEscrow  {
      */
     modifier awaitAgent(uint _transactionid) {
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        require(wtx.status == Status.AWAITING_AGENT);
+        require(wtx.status == Status.AWAITING_AGENT, "Transaction already paired to an agent!!");
         _;
     }
     
