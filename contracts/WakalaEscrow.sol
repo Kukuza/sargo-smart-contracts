@@ -209,12 +209,10 @@ contract WakalaEscrow  {
      * @param _phoneNumber the agents phone number.
      */
     function agentAcceptWithdrawalTransaction(uint _transactionid, string calldata _phoneNumber) public 
-     awaitAgent(_transactionid) withdrawalsOnly(_transactionid)  {
+     awaitAgent(_transactionid) withdrawalsOnly(_transactionid) nonClientOnly(_transactionid) {
          
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        
-        require(wtx.clientAddress != msg.sender);
-        
+
         wtx.agentAddress = msg.sender;
         wtx.status = Status.AWAITING_CONFIRMATIONS;
         wtx.agentPhoneNumber = _phoneNumber;
@@ -229,12 +227,11 @@ contract WakalaEscrow  {
      */
     function agentAcceptDepositTransaction(uint _transactionid, string calldata _phoneNumber) public
         awaitAgent(_transactionid) depositsOnly(_transactionid)
+        nonClientOnly(_transactionid)
         balanceGreaterThanAmount(_transactionid)
         payable {
         
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        
-        require(wtx.clientAddress != msg.sender);
 
         wtx.agentAddress = msg.sender;
         wtx.status = Status.AWAITING_CONFIRMATIONS;
@@ -381,7 +378,7 @@ contract WakalaEscrow  {
      */
     modifier agentOnly(uint _transactionid) {
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        require(msg.sender == wtx.agentAddress, "Method can only be called by the agent");
+        require(msg.sender == wtx.agentAddress, "Action can only be performed by the agent");
         _;
     }
     
@@ -391,7 +388,7 @@ contract WakalaEscrow  {
     modifier depositsOnly(uint _transactionid) {
          WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         require(wtx.txType == TransactionType.DEPOSIT, 
-            "Method can only be called for deposit transactions only!!");
+            "Action can only be performed for deposit transactions only!!");
         _;
     }
     
@@ -402,7 +399,7 @@ contract WakalaEscrow  {
     modifier withdrawalsOnly(uint _transactionid) {
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
         require(wtx.txType == TransactionType.WITHDRAWAL,
-        "Method can only be called for withdrawal transactions only!!");
+        "Action can only be performed for withdrawal transactions only!!");
         _;
     }
     
@@ -412,17 +409,27 @@ contract WakalaEscrow  {
      */
     modifier clientOnly(uint _transactionid) {
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        require(msg.sender == wtx.clientAddress, "Method can only be called by the client!!");
+        require(msg.sender == wtx.clientAddress, "Action can only be performed by the client!!");
+        _;
+    }
+
+    /**
+     * Prevents the client from running the logic.
+     * @param _transactionid the transaction being processed.
+     */
+    modifier nonClientOnly(uint _transactionid) {
+        WakalaTransaction storage wtx = escrowedPayments[_transactionid];
+        require(msg.sender != wtx.clientAddress, "Action can not be performed by the client!!");
         _;
     }
     
     /**
-     * Prevents users othe than the client from running the logic.
+     * Only alows method to be excecuted in tx in question is waiting confirmation.
      * @param _transactionid the transaction being processed.
      */
     modifier awaitConfirmation(uint _transactionid) {
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        require(wtx.status == Status.AWAITING_CONFIRMATIONS);
+        require(wtx.status == Status.AWAITING_CONFIRMATIONS, "Transaction is not awaiting confirmation from anyone.");
         _;
     }
     
@@ -432,7 +439,7 @@ contract WakalaEscrow  {
      */
     modifier awaitAgent(uint _transactionid) {
         WakalaTransaction storage wtx = escrowedPayments[_transactionid];
-        require(wtx.status == Status.AWAITING_AGENT);
+        require(wtx.status == Status.AWAITING_AGENT, "Transaction already paired to an agent!!");
         _;
     }
     
