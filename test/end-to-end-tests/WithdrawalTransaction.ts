@@ -1,3 +1,4 @@
+/* eslint-disable node/no-missing-import */
 import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { TestUtil, WakalaEscrowTransaction } from "../testutils";
@@ -7,53 +8,48 @@ describe("Withdrawal E2E", function () {
     const testUtil = new TestUtil();
     await testUtil.intit();
 
-    const agentSigner = testUtil.user1Address;
-    const clientSigner = testUtil.user2Address;
+    const agentSigner = testUtil.user2Address;
+    const clientSigner = testUtil.user1Address;
 
     const agentAddress = await agentSigner.getAddress();
     const clientAddress = await clientSigner.getAddress();
 
     await testUtil.cUSD.approve(testUtil.wakalaEscrow.address, 10);
 
-    console.log(testUtil.cUSD.address);
     expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(0);
 
     let agentBalance = await testUtil.cUSD.balanceOf(agentAddress);
     let clientBalance = await testUtil.cUSD.balanceOf(clientAddress);
 
-    // Initialize top up transaction.
+    // Initialize withdraw transaction.
     expect(
       await testUtil.wakalaEscrow
         .connect(clientSigner)
-        .initializeDepositTransaction(5, "test phone number")
+        .initializeWithdrawalTransaction(5, "test phone number")
     )
       .to.emit("WakalaEscrow", "TransactionInitEvent")
-      .withArgs(0, testUtil.user1Address.getAddress());
+      .withArgs(0, clientAddress);
 
     // Check balances after method call.
     agentBalance = await testUtil.cUSD.balanceOf(agentAddress);
     clientBalance = await testUtil.cUSD.balanceOf(clientAddress);
-    expect(agentBalance).to.equal(BigNumber.from("100"));
-    expect(clientBalance).to.equal(BigNumber.from("0"));
+    expect(agentBalance).to.equal(BigNumber.from("0"));
+    expect(clientBalance).to.equal(BigNumber.from("95"));
 
     // Agent accept transaction
     expect(
       await testUtil.wakalaEscrow
         .connect(agentSigner)
-        .agentAcceptDepositTransaction(0, "test phone number")
+        .agentAcceptWithdrawalTransaction(0, "test phone number")
     )
       .to.emit("WakalaEscrow", "AgentPairingEvent")
-      .withArgs(
-        0,
-        testUtil.user1Address.getAddress(),
-        testUtil.user2Address.getAddress()
-      );
+      .withArgs(0, clientAddress, agentAddress);
 
     // Check balances after method call.
     agentBalance = await testUtil.cUSD.balanceOf(agentAddress);
     clientBalance = await testUtil.cUSD.balanceOf(clientAddress);
-    expect(agentBalance).to.equal(BigNumber.from("95"));
-    expect(clientBalance).to.equal(BigNumber.from("0"));
+    expect(agentBalance).to.equal(BigNumber.from("0"));
+    expect(clientBalance).to.equal(BigNumber.from("95"));
 
     // Client confirm transaction.
     expect(
@@ -69,19 +65,15 @@ describe("Withdrawal E2E", function () {
     // Check balances after method call.
     agentBalance = await testUtil.cUSD.balanceOf(agentAddress);
     clientBalance = await testUtil.cUSD.balanceOf(clientAddress);
-    expect(agentBalance).to.equal(BigNumber.from("95"));
-    expect(clientBalance).to.equal(BigNumber.from("0"));
+    expect(agentBalance).to.equal(BigNumber.from("0"));
+    expect(clientBalance).to.equal(BigNumber.from("95"));
 
     // Agent confirm transaction.
     expect(
       await testUtil.wakalaEscrow.connect(agentSigner).agentConfirmPayment(0)
     )
       .to.emit("WakalaEscrow", "TransactionCompletionEvent")
-      .withArgs(
-        0,
-        testUtil.user1Address.getAddress(),
-        testUtil.user2Address.getAddress()
-      );
+      .withArgs(0, agentAddress, clientAddress);
 
     // Check balances after method call.
     agentBalance = await testUtil.cUSD.balanceOf(agentAddress);
@@ -90,8 +82,8 @@ describe("Withdrawal E2E", function () {
       testUtil.wakalaTreasury.address
     );
     expect(wakalaTreasury).to.equal(BigNumber.from("1"));
-    expect(agentBalance).to.equal(BigNumber.from("97"));
-    expect(clientBalance).to.equal(BigNumber.from("2"));
+    expect(agentBalance).to.equal(BigNumber.from("4"));
+    expect(clientBalance).to.equal(BigNumber.from("95"));
 
     // Value above next tx index
     const tx2: WakalaEscrowTransaction = testUtil.convertToWakalaTransactionObj(
@@ -99,7 +91,7 @@ describe("Withdrawal E2E", function () {
         .connect(testUtil.user2Address)
         .getTransactionByIndex(0)
     );
-    console.log(tx2);
+
     expect(tx2.id).equal(0);
     expect(tx2.status).equal(4);
   });
