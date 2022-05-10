@@ -1,3 +1,4 @@
+/* eslint-disable node/no-missing-import */
 import { expect } from "chai";
 import { TestUtil } from "../testutils";
 

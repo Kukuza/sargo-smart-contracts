@@ -1,6 +1,8 @@
+/* eslint-disable node/no-missing-import */
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import { ethers } from "hardhat";
+// import { WakalaEscrow } from "../typechain/WakalaEscrow";
 
 /**
  * @typedef {Object} WakalaEscrowTransaction Wakala escrow transaction object.
@@ -36,6 +38,7 @@ export type WakalaEscrowTransaction = {
 
 export class TestUtil {
   public cUSD!: Contract;
+  // public wakalaEscrow!: WakalaEscrow;
   public wakalaEscrow!: Contract;
   public user1Address!: SignerWithAddress;
   public user2Address!: SignerWithAddress;
