@@ -14,7 +14,8 @@ describe("Test Initialize transactions.", function () {
     expect(
       await testUtil.wakalaEscrow.initializeWithdrawalTransaction(
         5,
-        "test phone number"
+        "KES",
+        "116"
       )
     )
       .to.emit("WakalaEscrow", "TransactionInitEvent")
@@ -30,10 +31,10 @@ describe("Test Initialize transactions.", function () {
     expect(wakalaTx.id).to.equal(0);
     expect(wakalaTx.agentFee).to.equal(testUtil.agentFees);
     expect(wakalaTx.wakalaFee).to.equal(testUtil.wakalaFees);
-    expect(wakalaTx.netAmount).to.equal(
-      5 - (testUtil.agentFees + testUtil.wakalaFees)
+    expect(wakalaTx.netAmount).to.equal(5);
+    expect(wakalaTx.grossAmount).to.equal(
+      5 + (testUtil.agentFees + testUtil.wakalaFees)
     );
-    expect(wakalaTx.grossAmount).to.equal(5);
   });
 
   it("Test initialize deposit transactions.", async function () {
@@ -45,10 +46,7 @@ describe("Test Initialize transactions.", function () {
     expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(0);
 
     expect(
-      await testUtil.wakalaEscrow.initializeDepositTransaction(
-        5,
-        "test phone number"
-      )
+      await testUtil.wakalaEscrow.initializeDepositTransaction(5, "KES", "116")
     )
       .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
@@ -63,9 +61,9 @@ describe("Test Initialize transactions.", function () {
     expect(wakalaTx.id).to.equal(0);
     expect(wakalaTx.agentFee).to.equal(testUtil.agentFees);
     expect(wakalaTx.wakalaFee).to.equal(testUtil.wakalaFees);
-    expect(wakalaTx.netAmount).to.equal(
-      5 - (testUtil.agentFees + testUtil.wakalaFees)
+    expect(wakalaTx.netAmount).to.equal(5);
+    expect(wakalaTx.grossAmount).to.equal(
+      5 + (testUtil.agentFees + testUtil.wakalaFees)
     );
-    expect(wakalaTx.grossAmount).to.equal(5);
   });
 });

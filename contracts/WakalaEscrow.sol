@@ -70,6 +70,8 @@ contract WakalaEscrow  {
         address agentAddress;
         Status status;
         uint256 netAmount;
+        string cryptoFiatConversionRate;
+        string fiatCurrencyCode;
         uint256 agentFee;
         uint256 wakalaFee;
         uint256 grossAmount;
@@ -136,29 +138,31 @@ contract WakalaEscrow  {
 
    /**
     * Client initialize withdrawal transaction.
-    * @param _amount the amount to be withdrawn.
-    * @param _phoneNumber the client`s phone number.
+    * @param _amount the amount to be deposited.
+    * @param _fiatCurrencyCode the fiat currency symbol of the transaction.
+    * @param _cryptoFiatConversionRate the value of one crypto.
     **/
-   function initializeWithdrawalTransaction(uint256 _amount, string calldata _phoneNumber) public payable {
+   function initializeWithdrawalTransaction(uint256 _amount,
+   string calldata _fiatCurrencyCode,
+   string calldata _cryptoFiatConversionRate) public payable {
         require(_amount > 0, "Amount to deposit must be greater than 0.");
         
         uint wtxID = nextTransactionID;
         nextTransactionID++;
         
-        uint grossAmount = _amount;
+        uint grossAmount = _amount + (wakalaFee + agentFee);
         WakalaTransaction storage newPayment = escrowedPayments[wtxID];
         
         newPayment.clientAddress = msg.sender;
         newPayment.id = wtxID;
         newPayment.txType = TransactionType.WITHDRAWAL;
-        newPayment.netAmount = grossAmount - (wakalaFee + agentFee);
+        newPayment.netAmount = _amount;
         newPayment.agentFee = agentFee;
         newPayment.wakalaFee = wakalaFee;
         newPayment.grossAmount = grossAmount;
         newPayment.status = Status.AWAITING_AGENT;
-        newPayment.clientPhoneNumber = _phoneNumber;
-        
-        // newPayment.clientPhoneNo = keccak256(abi.encodePacked(_phoneNumber, encryptionKey));
+        newPayment.cryptoFiatConversionRate = _cryptoFiatConversionRate;
+        newPayment.fiatCurrencyCode = _fiatCurrencyCode;
         newPayment.agentApproval = false;
         newPayment.clientApproval = false;
         
@@ -166,7 +170,8 @@ contract WakalaEscrow  {
         ERC20(cUsdTokenAddress).transferFrom(
             msg.sender,
             address(this), 
-            grossAmount);
+            grossAmount
+        );
     
         emit TransactionInitEvent(wtxID, msg.sender);
    }
@@ -174,9 +179,15 @@ contract WakalaEscrow  {
    /**
     * Client initialize deposit transaction.
     * @param _amount the amount to be deposited.
-    * @param _phoneNumber the client`s phone number.
+    * @param _fiatCurrencyCode the fiat currency symbol of the transaction.
+    * @param _cryptoFiatConversionRate the value of one crypto 
+    *    currency/ECR20 token unit in fiat at the time of transaction initialization.
+    *    To get the actual value do (value * 10 ^-3).
+    *    10 ^3 holds the value as an integer inclusive three decimal places. 
     **/
-   function initializeDepositTransaction(uint256 _amount, string calldata _phoneNumber) public {
+   function initializeDepositTransaction(uint256 _amount,
+   string calldata _fiatCurrencyCode,
+   string calldata _cryptoFiatConversionRate) public {
         require(_amount > 0, "Amount to deposit must be greater than 0.");
         
         uint wtxID = nextTransactionID;
@@ -184,17 +195,18 @@ contract WakalaEscrow  {
         
         WakalaTransaction storage newPayment = escrowedPayments[wtxID];
 
-        uint grossAmount = _amount;
+        uint grossAmount = _amount + (wakalaFee + agentFee);
 
         newPayment.clientAddress = msg.sender;
         newPayment.id = wtxID;
         newPayment.txType = TransactionType.DEPOSIT;
-        newPayment.netAmount = grossAmount - (wakalaFee + agentFee);
+        newPayment.netAmount = _amount;
         newPayment.agentFee = agentFee;
         newPayment.wakalaFee = wakalaFee;
         newPayment.grossAmount = grossAmount;
         newPayment.status = Status.AWAITING_AGENT;
-        newPayment.clientPhoneNumber = _phoneNumber;
+        newPayment.cryptoFiatConversionRate = _cryptoFiatConversionRate;
+        newPayment.fiatCurrencyCode = _fiatCurrencyCode;
         
         // newPayment.clientPhoneNo = keccak256(abi.encodePacked(_phoneNumber, encryptionKey));
         newPayment.agentApproval = false;

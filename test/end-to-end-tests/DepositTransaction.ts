@@ -25,7 +25,7 @@ describe("Deposit E2E", function () {
     expect(
       await testUtil.wakalaEscrow
         .connect(clientSigner)
-        .initializeDepositTransaction(5, "test phone number")
+        .initializeDepositTransaction(5, "KES", "1166")
     )
       .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
@@ -40,7 +40,7 @@ describe("Deposit E2E", function () {
     expect(
       await testUtil.wakalaEscrow
         .connect(agentSigner)
-        .agentAcceptDepositTransaction(0, "test phone number")
+        .agentAcceptDepositTransaction(0, "test phone number (agent)")
     )
       .to.emit("WakalaEscrow", "AgentPairingEvent")
       .withArgs(
@@ -52,7 +52,7 @@ describe("Deposit E2E", function () {
     // Check balances after method call.
     agentBalance = await testUtil.cUSD.balanceOf(agentAddress);
     clientBalance = await testUtil.cUSD.balanceOf(clientAddress);
-    expect(agentBalance).to.equal(BigNumber.from("95"));
+    expect(agentBalance).to.equal(BigNumber.from("92"));
     expect(clientBalance).to.equal(BigNumber.from("0"));
 
     // Client confirm transaction.
@@ -69,7 +69,7 @@ describe("Deposit E2E", function () {
     // Check balances after method call.
     agentBalance = await testUtil.cUSD.balanceOf(agentAddress);
     clientBalance = await testUtil.cUSD.balanceOf(clientAddress);
-    expect(agentBalance).to.equal(BigNumber.from("95"));
+    expect(agentBalance).to.equal(BigNumber.from("92"));
     expect(clientBalance).to.equal(BigNumber.from("0"));
 
     // Agent confirm transaction.
@@ -90,8 +90,8 @@ describe("Deposit E2E", function () {
       testUtil.wakalaTreasury.address
     );
     expect(wakalaTreasury).to.equal(BigNumber.from("1"));
-    expect(agentBalance).to.equal(BigNumber.from("97"));
-    expect(clientBalance).to.equal(BigNumber.from("2"));
+    expect(agentBalance).to.equal(BigNumber.from("94"));
+    expect(clientBalance).to.equal(BigNumber.from("5"));
 
     // Value above next tx index
     const tx2: WakalaEscrowTransaction = testUtil.convertToWakalaTransactionObj(

@@ -12,28 +12,19 @@ describe("Test Get Next un-paired transaction.", function () {
     expect(await testUtil.wakalaEscrow.getNextTransactionIndex()).to.equal(0);
 
     expect(
-      await testUtil.wakalaEscrow.initializeDepositTransaction(
-        5,
-        "test phone number"
-      )
+      await testUtil.wakalaEscrow.initializeDepositTransaction(5, "KES", "116")
     )
       .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
 
     expect(
-      await testUtil.wakalaEscrow.initializeDepositTransaction(
-        5,
-        "test phone number"
-      )
+      await testUtil.wakalaEscrow.initializeDepositTransaction(5, "KES", "116")
     )
       .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
 
     expect(
-      await testUtil.wakalaEscrow.initializeDepositTransaction(
-        5,
-        "test phone number"
-      )
+      await testUtil.wakalaEscrow.initializeDepositTransaction(5, "KES", "116")
     )
       .to.emit("WakalaEscrow", "TransactionInitEvent")
       .withArgs(0, testUtil.user1Address.getAddress());
@@ -41,7 +32,8 @@ describe("Test Get Next un-paired transaction.", function () {
     expect(
       await testUtil.wakalaEscrow.initializeWithdrawalTransaction(
         5,
-        "test phone number"
+        "KES",
+        "116"
       )
     )
       .to.emit("WakalaEscrow", "TransactionInitEvent")

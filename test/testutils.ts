@@ -24,16 +24,19 @@ export type WakalaEscrowTransaction = {
   id: number;
   txType: number;
   clientAddress: string;
+  agentAddress: string;
   status: number;
   netAmount: number;
-  agentAddress?: string;
+  cryptoFiatConversionRate: string;
+  fiatCurrencyCode: string;
+  agentFee: number;
   wakalaFee: number;
   grossAmount: number;
-  agentFee: number;
   agentApproval: string;
   clientApproval: string;
   clientPhoneNumber: string;
   agentPhoneNumber: string;
+
 };
 
 export class TestUtil {
@@ -78,6 +81,7 @@ export class TestUtil {
    * @returns the wakala transaction object.
    */
   convertToWakalaTransactionObj(tx: string[]): WakalaEscrowTransaction {
+
     const wakalaTx: WakalaEscrowTransaction = {
       id: parseInt(tx[0]),
       txType: parseInt(tx[1]),
@@ -85,13 +89,15 @@ export class TestUtil {
       agentAddress: tx[3],
       status: parseInt(tx[4]),
       netAmount: parseInt(tx[5]),
-      agentFee: parseInt(tx[6]),
-      wakalaFee: parseInt(tx[7]),
-      grossAmount: parseInt(tx[8]),
-      agentApproval: tx[9],
-      clientApproval: tx[10],
-      agentPhoneNumber: Buffer.from(tx[11], "base64").toString("ascii"),
-      clientPhoneNumber: Buffer.from(tx[12], "base64").toString("ascii"),
+      cryptoFiatConversionRate: tx[6],
+      fiatCurrencyCode: tx[7],
+      agentFee: parseInt(tx[8]),
+      wakalaFee: parseInt(tx[9]),
+      grossAmount: parseInt(tx[10]),
+      agentApproval: tx[11],
+      clientApproval: tx[12],
+      agentPhoneNumber: tx[13],
+      clientPhoneNumber: tx[14],
     };
 
     return wakalaTx;
