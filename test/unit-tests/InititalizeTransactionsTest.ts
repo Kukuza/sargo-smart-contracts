@@ -31,6 +31,8 @@ describe("Test Initialize transactions.", function () {
     expect(wakalaTx.id).to.equal(0);
     expect(wakalaTx.agentFee).to.equal(testUtil.agentFees);
     expect(wakalaTx.wakalaFee).to.equal(testUtil.wakalaFees);
+    expect(wakalaTx.fiatCurrencyCode).to.equal("KES");
+    expect(wakalaTx.cryptoFiatConversionRate).to.equal("116");
     expect(wakalaTx.netAmount).to.equal(5);
     expect(wakalaTx.grossAmount).to.equal(
       5 + (testUtil.agentFees + testUtil.wakalaFees)
@@ -62,6 +64,8 @@ describe("Test Initialize transactions.", function () {
     expect(wakalaTx.agentFee).to.equal(testUtil.agentFees);
     expect(wakalaTx.wakalaFee).to.equal(testUtil.wakalaFees);
     expect(wakalaTx.netAmount).to.equal(5);
+    expect(wakalaTx.fiatCurrencyCode).to.equal("KES");
+    expect(wakalaTx.cryptoFiatConversionRate).to.equal("116");
     expect(wakalaTx.grossAmount).to.equal(
       5 + (testUtil.agentFees + testUtil.wakalaFees)
     );
