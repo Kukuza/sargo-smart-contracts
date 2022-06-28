@@ -14,7 +14,8 @@ describe("Test withdrawal transaction end to end.", function () {
     expect(
       await testUtil.wakalaEscrow.initializeWithdrawalTransaction(
         5,
-        "test phone number"
+        "KES",
+        "116"
       )
     )
       .to.emit("WakalaEscrow", "TransactionInitEvent")
